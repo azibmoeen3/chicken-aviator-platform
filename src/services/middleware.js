@@ -6,7 +6,7 @@ function attachLocals(req, res, next) {
   req.currentUser = user || null;
   res.locals.user = publicUser(user);
   res.locals.settings = db.settings;
-  res.locals.flash = req.flash ? req.flash() : {};
+  res.locals.flash = res.locals.flash || {};
   res.locals.path = req.path;
   next();
 }

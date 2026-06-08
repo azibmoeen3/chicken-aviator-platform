@@ -3,7 +3,27 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const session = require('express-session');
-const flash = require('connect-flash');
+function flash(req, res, next) {
+  if (req.session && req.session.flash) {
+    req.flash = (type, msg) => {
+      if (!req.session.flash) req.session.flash = {};
+      if (!req.session.flash[type]) req.session.flash[type] = [];
+      req.session.flash[type].push(msg);
+    };
+    const msgs = req.session.flash;
+    req.session.flash = {};
+    res.locals.flash = msgs;
+  } else {
+    req.flash = (type, msg) => {
+      if (!req.session) return;
+      if (!req.session.flash) req.session.flash = {};
+      if (!req.session.flash[type]) req.session.flash[type] = [];
+      req.session.flash[type].push(msg);
+    };
+    res.locals.flash = {};
+  }
+  next();
+}
 const compression = require('compression');
 const helmet = require('helmet');
 const { Server } = require('socket.io');
@@ -36,7 +56,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 }
 }));
-app.use(flash());
+app.use(flash);
 app.use(attachLocals);
 
 app.use('/', require('./routes/public'));
